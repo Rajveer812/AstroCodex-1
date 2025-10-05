@@ -46,36 +46,57 @@ def render_nav(active_page: str = 'home'):
         links_html.append(f"<a href='?page={page_key}' class='{cls}'>{label}</a>")
     brand_link = "<a href='?page=home' style='text-decoration:none;color:inherit;'>Astrocast</a>" if active_page != 'home' else 'Astrocast'
     aria_pressed = 'true' if (active_page == 'home' and chat_active) else 'false'
-    st.markdown(f"""
-    <nav class='astro-nav'>
-      <div class='astro-nav-inner'>
-        <div class='astro-brand' style='display:flex;align-items:center;gap:.55rem;'>
-          <img src='data:image/png;base64,{logo_b64}' alt='logo' style='height:30px;width:30px;display:block;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.4);background:#0f172a;padding:2px;'>
-          <span>{brand_link}</span>
-        </div>
-        <div class='astro-links'>
-          {' '.join(links_html)}
-          <button id="navChatBtn" class="nav-chat-btn" aria-label="AI Assistant" aria-pressed="{aria_pressed}" type="button">🤖 <span style='letter-spacing:.5px;'>AI Assistant</span></button>
-        </div>
-      </div>
-    </nav>
-    <script>
-    document.addEventListener('DOMContentLoaded',()=>{{
-      const btn=document.getElementById('navChatBtn');
-      if(btn){{
-        btn.addEventListener('click',()=>{{
-          const url=new URL(window.location.href);
-          const isActive = url.searchParams.get('chat')==='1' && url.searchParams.get('page')==='home';
-          if(isActive){{
-            // toggle off
-            url.searchParams.delete('chat');
-          }} else {{
-            url.searchParams.set('page','home');
-            url.searchParams.set('chat','1');
-          }}
-          window.location.href=url.toString();
-        }});
-      }}
-    }});
-    </script>
-    """, unsafe_allow_html=True)
+    # Determine active city from session state (safe access)
+    active_city = st.session_state.get('selected_city') if hasattr(st, 'session_state') else None
+    city_badge_html = f"<div class='city-badge' title='Active city'><strong>📍</strong><span>{active_city.title()}</span></div>" if active_city else ""
+    nav_html = (
+        "<nav class='astro-nav'>"
+        "<div class='astro-nav-inner'>"
+        "<div class='astro-brand' style='display:flex;align-items:center;gap:.55rem;'>"
+        f"<img src='data:image/png;base64,{logo_b64}' alt='logo' style='height:30px;width:30px;display:block;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.4);background:#0f172a;padding:2px;'>"
+        f"<span>{brand_link}</span>"
+        "</div>"
+        "<div class='astro-links'>"
+        + " ".join(links_html)
+        + f"<button id='navChatBtn' class='nav-chat-btn' aria-label='AI Assistant' aria-pressed='{aria_pressed}' type='button'>🤖 <span style='letter-spacing:.5px;'>AI Assistant</span></button>"
+        + city_badge_html + "</div></div></nav>"
+    )
+    js = """
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // Ensure internal links stay same-tab
+  document.querySelectorAll('.astro-links a[href*="?page="]').forEach(function(a){
+    if(a.hasAttribute('target')) a.removeAttribute('target');
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var url = new URL(window.location.href);
+      var href = new URL(a.getAttribute('href'), window.location.origin);
+      var pageParam = href.searchParams.get('page');
+      if(pageParam){
+        url.searchParams.set('page', pageParam);
+        url.searchParams.delete('chat');
+        window.location.href = url.toString();
+      }
+    });
+  });
+  var btn = document.getElementById('navChatBtn');
+  if(btn){
+    btn.addEventListener('click', function(){
+      var url = new URL(window.location.href);
+      var isActive = url.searchParams.get('chat')==='1' && url.searchParams.get('page')==='home';
+      if(isActive){ url.searchParams.delete('chat'); }
+      else { url.searchParams.set('page','home'); url.searchParams.set('chat','1'); }
+      window.location.href = url.toString();
+    });
+  }
+  // Remove any stray literal </div> text nodes in nav
+  var nav = document.querySelector('.astro-nav-inner');
+  if(nav){
+    Array.prototype.slice.call(nav.childNodes).forEach(function(n){
+      if(n.nodeType===3 && n.textContent.trim()==='</div>'){ n.remove(); }
+    });
+  }
+});
+</script>
+"""
+    st.markdown(nav_html + js, unsafe_allow_html=True)

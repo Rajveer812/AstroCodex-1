@@ -26,21 +26,29 @@ THEME_CSS = """
 	--trans-fast: 120ms ease;
 	--max-width: 1280px;
 	--font-stack: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
+	--nav-height: 62px;
+	--nav-offset: 48px; /* distance from very top before nav starts (increased) */
 }
 
 html, body, .main, .block-container { background: var(--color-bg) !important; }
-.block-container { padding-top: 0 !important; max-width: var(--max-width); }
+/* Add top padding equal to nav height + small gap so first element not hidden */
+.block-container { padding-top: calc(var(--nav-offset) + var(--nav-height) + 20px) !important; max-width: var(--max-width); }
 
 * { font-family: var(--font-stack); }
 
 /* Navigation */
-.astro-nav { position:sticky; top:0; z-index:1000; backdrop-filter: blur(12px); background:rgba(15,23,42,0.85); border-bottom:1px solid var(--color-border); }
-.astro-nav-inner { display:flex; align-items:center; gap:2.2rem; padding:0.85rem 1.2rem; }
+.astro-nav { position:fixed; top:var(--nav-offset); left:0; right:0; height:var(--nav-height); z-index:1100; backdrop-filter: blur(12px); background:rgba(15,23,42,0.9); border-bottom:1px solid var(--color-border); }
+.astro-nav-inner { display:flex; align-items:center; gap:2.2rem; padding:0.85rem 1.6rem; max-width: var(--max-width); margin:0 auto; }
 .astro-brand { font-size:1.35rem; font-weight:700; background:var(--color-accent-grad); -webkit-background-clip:text; color:transparent; letter-spacing:.5px; }
 .astro-links { display:flex; gap:1.4rem; }
 .astro-links a { color: var(--color-text-dim); text-decoration:none; font-size:0.9rem; font-weight:500; letter-spacing:.5px; position:relative; padding:.35rem .2rem; }
 .astro-links a:hover, .astro-links a:focus { color: var(--color-text); }
 .astro-links a.active:after { content:""; position:absolute; left:0; bottom:-4px; height:2px; width:100%; background:var(--color-accent); border-radius:2px; }
+
+/* Active City Badge */
+.city-badge { background:var(--color-card-accent); color:var(--color-text-dim); padding:0.35rem 0.7rem; border-radius:18px; font-size:0.7rem; letter-spacing:.5px; display:flex; align-items:center; gap:.35rem; border:1px solid var(--color-border); }
+.city-badge span { max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.city-badge strong { color:var(--color-text); font-weight:600; }
 
 /* Nav Chat Button */
 .nav-chat-btn { display:flex; align-items:center; justify-content:center; padding:0 .9rem; height:38px; border-radius:19px; font-size:13px; font-weight:600; gap:.4rem; line-height:1; cursor:pointer; background:transparent; border:1px solid var(--color-border); color:var(--color-text-dim); transition:var(--trans-fast); }

@@ -114,14 +114,24 @@ if active_page == 'home':
     # --- UI: Inputs ---
     city, date, check_weather, forecast_placeholder, cols = render_inputs()
 else:
-    # Provide common inputs for pages that still need a city context (compare / insights / report)
+    # Use previously selected city; no duplicate input shown on other pages
     with st.container():
-        st.markdown("<div style='margin-top:1.2rem'></div>", unsafe_allow_html=True)
-        city = st.text_input("City", value="", help="Enter a city to fetch data")
+        st.markdown("<div style='margin-top:0.8rem'></div>", unsafe_allow_html=True)
+        city = st.session_state.get('selected_city', '')
         date = datetime.date.today()
         check_weather = False
         forecast_placeholder = st.empty()
         cols = st.columns(3)
+        if not city:
+            st.info("Select a city on the Home page to enable features here.")
+        else:
+            # Provide quick link to change city
+            if st.button("Change City", key="change_city_btn", help="Go to Home to pick a different city"):
+                try:
+                    st.query_params.update({'page': 'home'})
+                except Exception:
+                    st.experimental_set_query_params(page='home')
+                st.experimental_rerun() if hasattr(st, 'experimental_rerun') else st.rerun()
 # Remove unnecessary empty white box
 # st.markdown("<div style='margin-top: 2em;'></div>", unsafe_allow_html=True)
 
@@ -268,6 +278,8 @@ if active_page == 'home' and check_weather:
     if not city:
         st.error("⚠️ Please enter a city name")
     else:
+        # Persist chosen city so other pages can use it without re-entering
+        st.session_state['selected_city'] = city
         try:
             data = get_forecast(city)
         except Exception as e:
